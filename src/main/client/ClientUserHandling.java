@@ -4,13 +4,19 @@
 package a4.src.main.client;
 
 import a4.src.main.utility.Commands;
+import a4.src.main.utility.MACUtility;
 import a4.src.main.utility.Validation;
 
 import java.io.BufferedReader;
 import java.io.PrintWriter;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.io.IOException;
+import java.util.Base64;
 import java.util.Scanner;
 
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 
@@ -23,6 +29,7 @@ public class ClientUserHandling {
     private final PrintWriter clientOut;
     private final Scanner scanner;
     private boolean disconnectFromServer;
+    private SecretKey secretKey;
     
     /**
      * Constructor.
@@ -39,15 +46,38 @@ public class ClientUserHandling {
         disconnectFromServer = false;
     }
 
-    
+    /**
+     * Receives a SecretKey object from the server, encoded in Base64 format.
+     * Verifies that the server's certificate is trusted and then decodes the
+     * SecretKey from Base64 format and converts it to a SecretKey object.
+     * @throws IOException If an I/O error occurs while reading the encoded SecretKey from the input stream.
+     */
+    protected void receiveSecretKeyFromServer() throws IOException {
+        // Receive the encoded SecretKey from the server
+        String encodedSecretKey = this.clientIn.readLine();
+
+        // Verify that the server's certificate is trusted by checking the SSLSession
+        SSLSession sslSession = sslSocket.getSession();
+        sslSession.getPeerCertificates();
+
+        // Decode the encoded SecretKey from Base64 to a byte array
+        byte[] secretKeyBytes = Base64.getDecoder().decode(encodedSecretKey);
+
+        // Convert the byte array to a SecretKey object
+        this.secretKey = new SecretKeySpec(secretKeyBytes, MACUtility.getKeyAlgorithm());
+    }
+
     /**
      * Handles the connection of the client to the server. It prompts the user to input 
      * their username, connects to the server with the username, waits for a response 
      * from the server, and then validates the response.
      * @throws IOException if there is an error with the input/output stream.
      * @throws ClientException if there is an error with the server response.
+     * @throws InvalidKeyException If the secret key is invalid for computing the MAC.
+     * @throws NoSuchAlgorithmException If the algorithm for computing the MAC is not available.
      */
-    public void handleConnect() throws IOException, ClientException {
+    protected void handleConnect() throws IOException, ClientException, InvalidKeyException, 
+            NoSuchAlgorithmException {
         // Get user input
         System.out.print(ClientConstants.CLIENT_USER_CONNECT_MESSAGE);
         String userInput = this.getUserInput();
@@ -56,7 +86,7 @@ public class ClientUserHandling {
         this.sendMessageToServer(ClientConstants.CLIENT_CONNECT, " ", userInput);
         
         // Wait for server response
-        String response = this.clientIn.readLine();
+        String response = getAndCheckMessageFromServer();
 
         // Ensure response is not null
         if (response == null) {
@@ -91,8 +121,11 @@ public class ClientUserHandling {
      * @throws IOException if there is an error with the input/output stream.
      * @throws ClientException if there is an error with the server response.
      * @return true if the user wishes to disconnect, otherwise, false.
+     * @throws InvalidKeyException If the secret key is invalid for computing the MAC.
+     * @throws NoSuchAlgorithmException If the algorithm for computing the MAC is not available.
      */
-    public boolean handleRequest() throws IOException, ClientException {        
+    protected boolean handleRequest() throws IOException, ClientException, InvalidKeyException,
+            NoSuchAlgorithmException {        
         // Get user command
         System.out.print(ClientConstants.CLIENT_USER_COMMAND_MESSAGE);
         String userInput = this.getUserInput();
@@ -125,8 +158,10 @@ public class ClientUserHandling {
      * printing it to the console.
      * @throws IOException if there is an error with the input/output stream.
      * @throws ClientException if there is an error with the client response.
+     * @throws InvalidKeyException If the secret key is invalid for computing the MAC.
+     * @throws NoSuchAlgorithmException If the algorithm for computing the MAC is not available.
      */
-    public void handleGet() throws IOException, ClientException {
+    private void handleGet() throws IOException, ClientException, InvalidKeyException, NoSuchAlgorithmException {
         // Get key from user
         System.out.println(ClientConstants.CLIENT_USER_GET_MESSAGE);
         String key = this.getUserInput();
@@ -141,7 +176,7 @@ public class ClientUserHandling {
         this.sendMessageToServer(Commands.GET.toString(), " ", key);
 
         // Wait for server response
-        String response = this.clientIn.readLine();
+        String response = getAndCheckMessageFromServer();
 
         // Ensure response is not null
         if (response == null) {
@@ -157,8 +192,10 @@ public class ClientUserHandling {
      * printing the response to the console.
      * @throws IOException if there is an error with the input/output stream.
      * @throws ClientException if there is an error with the client response.
+     * @throws InvalidKeyException If the secret key is invalid for computing the MAC.
+     * @throws NoSuchAlgorithmException If the algorithm for computing the MAC is not available.
      */
-    public void handleDelete() throws IOException, ClientException {
+    private void handleDelete() throws IOException, ClientException, InvalidKeyException, NoSuchAlgorithmException {
         // Get key from user
         System.out.println(ClientConstants.CLIENT_USER_DELETE_MESSAGE);
         String key = this.getUserInput();
@@ -173,7 +210,7 @@ public class ClientUserHandling {
         this.sendMessageToServer(Commands.DELETE.toString(), " ", key);
 
         // Wait for server response
-        String response = this.clientIn.readLine();
+        String response = getAndCheckMessageFromServer();
 
         // Ensure response is not null
         if (response == null) {
@@ -197,13 +234,15 @@ public class ClientUserHandling {
      * Sends a DISCONNECT command to the server and waits for its response.
      * @throws IOException if there is an error with the input/output stream.
      * @throws ClientException if there is an error with the client response.
+     * @throws InvalidKeyException If the secret key is invalid for computing the MAC.
+     * @throws NoSuchAlgorithmException If the algorithm for computing the MAC is not available.
      */
-    public void handleDisconnect() throws IOException, ClientException {
+    private void handleDisconnect() throws IOException, ClientException, InvalidKeyException, NoSuchAlgorithmException {
         // Send DISCONNECT request to server
         this.sendMessageToServer(Commands.DISCONNECT.toString());
 
         // Wait for server response
-        String response = this.clientIn.readLine();
+        String response = getAndCheckMessageFromServer();
 
         // Ensure response is not null
         if (response == null) {
@@ -231,8 +270,10 @@ public class ClientUserHandling {
      * response.
      * @throws IOException if there is an error with the input/output stream.
      * @throws ClientException if there is an error with the client response.
+     * @throws InvalidKeyException If the secret key is invalid for computing the MAC.
+     * @throws NoSuchAlgorithmException If the algorithm for computing the MAC is not available.
      */
-    public void handlePut() throws IOException, ClientException {
+    private void handlePut() throws IOException, ClientException, InvalidKeyException, NoSuchAlgorithmException {
         // Get key from user
         System.out.println(ClientConstants.CLIENT_USER_PUT_KEY_MESSAGE);
         String key = this.getUserInput();
@@ -258,7 +299,7 @@ public class ClientUserHandling {
             String.valueOf(ClientConstants.MESSAGE_TERMINATION), value);
 
         // Wait for server response
-        String response = this.clientIn.readLine();
+        String response = getAndCheckMessageFromServer();
 
         // Ensure response is not null
         if (response == null) {
@@ -282,7 +323,7 @@ public class ClientUserHandling {
      * Sends a message to the server.
      * @param messages The message(s) to be sent to the server.
      */
-    public void sendMessageToServer(final String ... messages) {
+    private void sendMessageToServer(final String ... messages) {
         String message = String.join("", messages);
         this.clientOut.printf("%s%s", message, ClientConstants.MESSAGE_TERMINATION);
     }
@@ -291,7 +332,7 @@ public class ClientUserHandling {
      * Reads a line of input from the user and removes any trailing newline characters.
      * @return The user input string.
      */
-    public String getUserInput() {
+    private String getUserInput() {
         // Get user input
         String userInput = this.scanner.nextLine();
         
@@ -299,5 +340,34 @@ public class ClientUserHandling {
         userInput = userInput.endsWith("\n") ? userInput.substring(0, userInput.length() - 1) : userInput;
 
         return userInput;
+    }
+
+    /**
+     * Receives an encoded HMAC and a message from the server, decodes and verifies the HMAC,
+     * and returns the message if the verification is successful.
+     * @return Ihe message received from the server.
+     * @throws IOException if there is an error with the input/output stream.
+     * @throws InvalidKeyException If the secret key is invalid for computing the MAC.
+     * @throws NoSuchAlgorithmException If the algorithm for computing the MAC is not available.
+     * @throws SecurityException If the received HMAC does not match the computed HMAC for the message, 
+     * indicating that the message has been tampered with.
+     */
+    private String getAndCheckMessageFromServer() throws IOException, InvalidKeyException, NoSuchAlgorithmException {
+        // Receive the encoded SecretKey from the server
+        String encodedHmac = this.clientIn.readLine();
+
+        // Decode the encoded HMAC from Base64 to a byte array
+        byte[] receievedHmac = Base64.getDecoder().decode(encodedHmac);
+
+        // Receive the encoded HMAC from the server
+        String message = this.clientIn.readLine();
+
+        byte[] messageHmac = MACUtility.generateMac(message, this.secretKey);
+
+        if (MACUtility.macCodesAreEqual(messageHmac, receievedHmac)) {
+            return message;
+        } else {
+            throw new SecurityException("HMAC verification failed - Message has been tampered with.");
+        }
     }
 }

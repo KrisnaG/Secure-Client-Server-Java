@@ -10,10 +10,11 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.IOException;
-import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.security.InvalidKeyException;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Scanner;
 import java.util.logging.Level;
@@ -114,6 +115,12 @@ public class Client {
             while (!disconnect) {
                 disconnect = clientUserHandling.handleRequest();
             }
+        } catch (SecurityException  error) {
+            logger.log(Level.WARNING, error.getMessage());
+            logger.log(Level.INFO, "Security Violation - Disconnecting");
+        } catch (InvalidKeyException | NoSuchAlgorithmException  error) {
+            logger.log(Level.WARNING, error.getMessage());
+            logger.log(Level.INFO, "HMAC Error - Disconnecting");
         } catch (SSLPeerUnverifiedException error) {
             logger.log(Level.WARNING, error.getMessage());
             logger.log(Level.INFO, "Untrusted Server Certificate - Disconnecting");

@@ -6,6 +6,7 @@ cd "$(dirname "$0")"
 # Compile the Java classes
 javac -d temp src/main/utility/Validation.java
 javac -d temp src/main/utility/Commands.java
+javac -d temp src/main/utility/MACUtility.java
 javac -d temp src/main/client/ClientConstants.java
 javac -d temp src/main/client/ClientException.java
 javac -cp ./temp -d temp src/main/client/ClientUserHandling.java
