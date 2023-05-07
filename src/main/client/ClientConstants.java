@@ -19,6 +19,10 @@ public class ClientConstants {
 
     // Client timeout
     public static final int MAX_TIMEOUT_MILLISECONDS = 30_000;
+    
+    // File locations
+    public static final String CLIENT_KEYSTORE_FILENAME = "src/main/client/resource/client.keystore";
+    public static final String TRUST_STORE_FILENAME = "src/main/resource/truststore.jks";
 
     // Client/Server message
     public static final char MESSAGE_TERMINATION = '\n';

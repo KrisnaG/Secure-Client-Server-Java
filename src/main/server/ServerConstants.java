@@ -11,7 +11,7 @@ public class ServerConstants {
      *  This class is not meant to be instantiated
      */
     private ServerConstants() {
-        throw new IllegalStateException("Cannot instantiate ClientConstants class");
+        throw new IllegalStateException("Cannot instantiate ServerConstants class");
     }
 
     // Server error codes
@@ -26,6 +26,10 @@ public class ServerConstants {
 
     // Server inputs
     public static final int NUMBER_OF_SERVER_START_INPUTS = 1;
+
+    // File locations
+    public static final String SERVER_KEYSTORE_FILENAME = "src/main/server/resource/server.keystore";
+    public static final String TRUST_STORE_FILENAME = "src/main/resource/truststore.jks";
 
     // Server messages
     public static final char MESSAGE_TERMINATION = '\n';

@@ -13,7 +13,7 @@ public class Validation {
      *  This class is not meant to be instantiated
      */
     private Validation() {
-        throw new IllegalStateException("Cannot instantiate ClientConstants class");
+        throw new IllegalStateException("Cannot instantiate Validation class");
     }
 
     /**

@@ -3,30 +3,27 @@
  */
 package a4.src.main.client;
 
+import a4.src.main.utility.SecurityUtility;
 import a4.src.main.utility.Validation;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
-import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManagerFactory;
 
 /**
  * The Client class represents a client that connects to a server.
@@ -34,8 +31,8 @@ import javax.net.ssl.TrustManagerFactory;
 public class Client {
     private final String hostName;
     private final int portNumber;
+    private static final char[] PASSWORD = "password".toCharArray();
     private static Logger logger = Logger.getLogger(Client.class.getName());
-    private final char[] password = "password".toCharArray();
 
     /**
      * Constructs a new Client with the given host name and port number.
@@ -47,43 +44,21 @@ public class Client {
         this.portNumber = portNumber;
     }
 
-    private SSLSocketFactory createSecureSocketFactory() {
-        SSLSocketFactory sslSocketFactory = null;
-        try {
-            // Load client keystore
-            KeyStore clientKeyStore = KeyStore.getInstance("JKS");
-            FileInputStream clientKeyStoreFile = new FileInputStream("src/main/client/resource/client.keystore");
-            clientKeyStore.load(clientKeyStoreFile, password);
-    
-            // Load client truststore
-            KeyStore clientTrustStore = KeyStore.getInstance("JKS");
-            FileInputStream clientTrustStoreFile = new FileInputStream("src/main/resource/truststore.jks");
-            clientTrustStore.load(clientTrustStoreFile, password);
-    
-            // Create SSL context
-            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            trustManagerFactory.init(clientTrustStore);
-            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-            keyManagerFactory.init(clientKeyStore, password);
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), new SecureRandom());
-    
-            // Create an SSLSocketFactory from the SSLContext
-            sslSocketFactory = sslContext.getSocketFactory();    
-        } catch (Exception error) {
-            logger.log(Level.WARNING, error.getMessage());
-            logger.log(Level.INFO, "Shutting down");
-            System.exit(2);
-        }
-
-        return sslSocketFactory;
-    }
-
     /**
      * Attempts to connect to the specified host and port, and executes user commands with the server.
      */
     public void connectToHost() {
-        SSLSocketFactory sslSocketFactory = this.createSecureSocketFactory();
+        SSLSocketFactory sslSocketFactory = null;
+
+        // Create an SSLSocketFactory from the SSLContext
+        try {
+            sslSocketFactory = SecurityUtility.createSSLContext(ClientConstants.CLIENT_KEYSTORE_FILENAME, 
+                ClientConstants.TRUST_STORE_FILENAME, PASSWORD, new SecureRandom())
+                .getSocketFactory();
+        } catch (Exception error) {
+            logger.log(Level.WARNING, error.getMessage());
+            return;
+        }
 
         // Attempts to connect to host on given port
         try (
@@ -98,7 +73,7 @@ public class Client {
             // Set timeout to prevent client hanging if server never responds
             sslSocket.setSoTimeout(ClientConstants.MAX_TIMEOUT_MILLISECONDS);
 
-            // Start connecting with serve
+            // Start connecting with server
             sslSocket.startHandshake();
 
             // Verify that the server's certificate is trusted by checking the SSLSession
@@ -107,6 +82,10 @@ public class Client {
 
             // For user handling
             ClientUserHandling clientUserHandling = new ClientUserHandling(sslSocket, clientIn, clientOut, scanner);
+            
+            // Send and receive symmetric key - Sever sends first
+            clientUserHandling.sendSecretKeyToServer();
+            clientUserHandling.receiveSecretKeyFromServer();
 
             // Connect to server with username
             clientUserHandling.handleConnect();
@@ -118,19 +97,17 @@ public class Client {
         } catch (SecurityException  error) {
             logger.log(Level.WARNING, error.getMessage());
             logger.log(Level.INFO, "Security Violation - Disconnecting");
-        } catch (InvalidKeyException | NoSuchAlgorithmException  error) {
+        } catch (NoSuchAlgorithmException | InvalidKeyException error) {
             logger.log(Level.WARNING, error.getMessage());
-            logger.log(Level.INFO, "HMAC Error - Disconnecting");
+            logger.log(Level.INFO, "Key Error - Disconnecting");
         } catch (SSLPeerUnverifiedException error) {
             logger.log(Level.WARNING, error.getMessage());
             logger.log(Level.INFO, "Untrusted Server Certificate - Disconnecting");
-        } catch (UnknownHostException | SocketTimeoutException | ClientException error) {
+        } catch (ClientException | IOException | NoSuchPaddingException 
+                | IllegalBlockSizeException | BadPaddingException error) {
             logger.log(Level.WARNING, error.getMessage());
             logger.log(Level.INFO, "Disconnecting");
-        }  catch (IOException error) {
-            logger.log(Level.WARNING, error.getMessage());
-            logger.log(Level.INFO, "IO Error - Disconnecting");
-        }
+        }     
     }
 
     /**

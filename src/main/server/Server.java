@@ -3,21 +3,17 @@
  */
 package a4.src.main.server;
 
+import a4.src.main.utility.SecurityUtility;
 import a4.src.main.utility.Validation;
 
-import java.io.FileInputStream;
-import java.security.KeyStore;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
-import javax.net.ssl.TrustManagerFactory;
 
 /**
  * Server class that provides various services to the clients. It listens for incoming client 
@@ -27,6 +23,7 @@ import javax.net.ssl.TrustManagerFactory;
 public class Server {
     private int portNumber;
     private static final ServerClientSessionManager serverClientIdManager = new ServerClientSessionManager();
+    private static final char[] PASSWORD = "password".toCharArray();
     private static Logger logger = Logger.getLogger(Server.class.getName());
     
     /**
@@ -48,46 +45,24 @@ public class Server {
                 < Runtime.getRuntime().maxMemory();
     }
 
-    private SSLServerSocketFactory createSecureServerSocketFactory() {
-        SSLServerSocketFactory sslServerSocketFactory = null;
-        try {
-            // load the keystore containing the server's certificate and private key
-            KeyStore keyStore = KeyStore.getInstance("JKS");
-            FileInputStream fileInputStream = new FileInputStream("src/main/server/resource/server.keystore");
-            keyStore.load(fileInputStream, "password".toCharArray());
-
-            // create a key manager factory to manage the server's key material
-            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-            keyManagerFactory.init(keyStore, "password".toCharArray());
-
-            // create a trust manager factory to manage the server's trust store
-            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            trustManagerFactory.init(keyStore);
-
-            // create an SSLContext to manage the SSL/TLS settings
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
-
-            // create an SSLServerSocketFactory from the SSLContext
-            sslServerSocketFactory = sslContext.getServerSocketFactory();
-
-        } catch (Exception error) {
-            logger.log(Level.WARNING, error.getMessage());
-            System.exit(ServerConstants.EXIT_FAILURE_CONNECTION);
-        } 
-
-        return sslServerSocketFactory;
-    }
-
     /**
      * Starts the server and listen for connections.
      */
     public void start() {
+        SSLServerSocketFactory sslServerSocketFactory = null;
+        
         // Executor to manage threads
         ExecutorService executor = Executors.newFixedThreadPool(ServerConstants.MAX_THREAD_COUNT);
 
-        // Create an SSLServerSocketFactory
-        SSLServerSocketFactory sslServerSocketFactory = this.createSecureServerSocketFactory();
+        try {
+            // Create an SSLServerSocketFactory
+            sslServerSocketFactory = SecurityUtility.createSSLContext(
+                ServerConstants.SERVER_KEYSTORE_FILENAME, ServerConstants.TRUST_STORE_FILENAME, PASSWORD, null)
+                .getServerSocketFactory();
+        } catch (Exception error) {
+            logger.log(Level.WARNING, error.getMessage());
+            System.exit(ServerConstants.EXIT_FAILURE_CONNECTION);
+        }
 
         // Attempts to open port
         try (SSLServerSocket sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(this.portNumber)) {
@@ -100,7 +75,7 @@ public class Server {
             while (true) {
                 // Listens for incoming client connections
                 SSLSocket clientSocket = (SSLSocket) sslServerSocket.accept();
-                
+
                 // Handle client in a separate thread
                 ServerClientHandler clientHandler = new ServerClientHandler(clientSocket, serverClientIdManager);
                 executor.submit(clientHandler);
