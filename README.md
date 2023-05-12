@@ -1,6 +1,7 @@
-# Java Client-Server Application
+# Secure Java Client-Server Application
 
-This is a Java client-server application for sending messages over a network. It consists of a server program and a client program that communicate with each other using sockets and specific commands.
+This is a Secure Java client-server application for sending messages over a network. It consists of a server program and a client program that communicate with each other using sockets and specific commands.
+
 
 ---
 
@@ -15,7 +16,7 @@ This is a Java client-server application for sending messages over a network. It
 
 ### ***Starting the Server***
 
-1. Navigate to the root directory of the project (a2).
+1. Navigate to the root directory of the project (a4).
 2. Run the following command to start the server:
 
 ```bash
@@ -28,7 +29,7 @@ NOTE: Any arguments inputted after the port number will be ignored.
 
 ### ***Starting the Client***
 
-1. Navigate to the root directory of the project (a2).
+1. Navigate to the root directory of the project (a4).
 2. Run the following command to start the client:
 
 ```bash
@@ -41,7 +42,7 @@ NOTE: Any arguments inputted after the port number will be ignored.
 
 ### ***Cleaning the compiled files***
 
-1. Navigate to the root directory of the project (a2).
+1. Navigate to the root directory of the project (a4).
 2. Run the following command to clean all compiled files in the temp directory:
 
 ```bash

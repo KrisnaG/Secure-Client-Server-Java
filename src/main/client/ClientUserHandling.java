@@ -52,7 +52,7 @@ public class ClientUserHandling {
     }
 
     /**
-     * TODO
+     * String encodedSecretKey = this.clientIn.readLine();
      * Assumes secure connect has been established.
      * @throws IOException If an I/O error occurs while reading the encoded SecretKey from the input stream.
      */
@@ -73,9 +73,8 @@ public class ClientUserHandling {
     }
 
     /**
-     * TODO
+     * Generates a SecretKey, encodes it using Base64, and sends it to the server.
      * Assumes secure connect has been established.
-     * @param serverOut The PrintWriter stream to send messages to the client.
      * @throws NoSuchAlgorithmException If the requested key algorithm is not available.
      */
     protected void sendSecretKeyToServer() throws NoSuchAlgorithmException {
@@ -100,12 +99,14 @@ public class ClientUserHandling {
      * @throws ClientException if there is an error with the server response.
      * @throws InvalidKeyException If the secret key is invalid for computing the MAC.
      * @throws NoSuchAlgorithmException If the algorithm for computing the MAC is not available.
-     * @throws BadPaddingException
-     * @throws IllegalBlockSizeException
-     * @throws NoSuchPaddingException
+     * @throws NoSuchPaddingException If the padding scheme used for encryption is not available.
+     * @throws IllegalBlockSizeException If the block size of the cipher is invalid.
+     * @throws BadPaddingException If the padding of the message is invalid.
      */
-    protected void handleConnect() throws IOException, ClientException, InvalidKeyException, 
-            NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+    protected void handleConnect() 
+            throws IOException, ClientException, InvalidKeyException, NoSuchAlgorithmException,
+            NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+        
         // Get user input
         System.out.print(ClientConstants.CLIENT_USER_CONNECT_MESSAGE);
         String userInput = this.getUserInput();
@@ -114,7 +115,7 @@ public class ClientUserHandling {
         this.sendMessageToServer(ClientConstants.CLIENT_CONNECT, " ", userInput);
         
         // Wait for server response
-        String response = getAndCheckMessageFromServer();
+        String response = this.getAndCheckMessageFromServer();
 
         // Ensure response is not null
         if (response == null) {
@@ -151,12 +152,14 @@ public class ClientUserHandling {
      * @return true if the user wishes to disconnect, otherwise, false.
      * @throws InvalidKeyException If the secret key is invalid for computing the MAC.
      * @throws NoSuchAlgorithmException If the algorithm for computing the MAC is not available.
-     * @throws BadPaddingException
-     * @throws IllegalBlockSizeException
-     * @throws NoSuchPaddingException
+     * @throws NoSuchPaddingException If the padding scheme used for encryption is not available.
+     * @throws IllegalBlockSizeException If the block size of the cipher is invalid.
+     * @throws BadPaddingException If the padding of the message is invalid.
      */
-    protected boolean handleRequest() throws IOException, ClientException, InvalidKeyException,
-            NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {        
+    protected boolean handleRequest() 
+            throws IOException, ClientException, InvalidKeyException, NoSuchAlgorithmException,
+            NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+
         // Get user command
         System.out.print(ClientConstants.CLIENT_USER_COMMAND_MESSAGE);
         String userInput = this.getUserInput();
@@ -191,11 +194,14 @@ public class ClientUserHandling {
      * @throws ClientException if there is an error with the client response.
      * @throws InvalidKeyException If the secret key is invalid for computing the MAC.
      * @throws NoSuchAlgorithmException If the algorithm for computing the MAC is not available.
-     * @throws BadPaddingException
-     * @throws IllegalBlockSizeException
-     * @throws NoSuchPaddingException
+     * @throws NoSuchPaddingException If the padding scheme used for encryption is not available.
+     * @throws IllegalBlockSizeException If the block size of the cipher is invalid.
+     * @throws BadPaddingException If the padding of the message is invalid.
      */
-    private void handleGet() throws IOException, ClientException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+    private void handleGet() 
+            throws IOException, ClientException, InvalidKeyException, NoSuchAlgorithmException,
+            NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+        
         // Get key from user
         System.out.println(ClientConstants.CLIENT_USER_GET_MESSAGE);
         String key = this.getUserInput();
@@ -210,7 +216,7 @@ public class ClientUserHandling {
         this.sendMessageToServer(Commands.GET.toString(), " ", key);
 
         // Wait for server response
-        String response = getAndCheckMessageFromServer();
+        String response = this.getAndCheckMessageFromServer();
 
         // Ensure response is not null
         if (response == null) {
@@ -228,11 +234,14 @@ public class ClientUserHandling {
      * @throws ClientException if there is an error with the client response.
      * @throws InvalidKeyException If the secret key is invalid for computing the MAC.
      * @throws NoSuchAlgorithmException If the algorithm for computing the MAC is not available.
-     * @throws BadPaddingException
-     * @throws IllegalBlockSizeException
-     * @throws NoSuchPaddingException
+     * @throws NoSuchPaddingException If the padding scheme used for encryption is not available.
+     * @throws IllegalBlockSizeException If the block size of the cipher is invalid.
+     * @throws BadPaddingException If the padding of the message is invalid.
      */
-    private void handleDelete() throws IOException, ClientException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+    private void handleDelete() 
+            throws IOException, ClientException, InvalidKeyException, NoSuchAlgorithmException,
+            NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+        
         // Get key from user
         System.out.println(ClientConstants.CLIENT_USER_DELETE_MESSAGE);
         String key = this.getUserInput();
@@ -247,7 +256,7 @@ public class ClientUserHandling {
         this.sendMessageToServer(Commands.DELETE.toString(), " ", key);
 
         // Wait for server response
-        String response = getAndCheckMessageFromServer();
+        String response = this.getAndCheckMessageFromServer();
 
         // Ensure response is not null
         if (response == null) {
@@ -273,16 +282,19 @@ public class ClientUserHandling {
      * @throws ClientException if there is an error with the client response.
      * @throws InvalidKeyException If the secret key is invalid for computing the MAC.
      * @throws NoSuchAlgorithmException If the algorithm for computing the MAC is not available.
-     * @throws BadPaddingException
-     * @throws IllegalBlockSizeException
-     * @throws NoSuchPaddingException
+     * @throws NoSuchPaddingException If the padding scheme used for encryption is not available.
+     * @throws IllegalBlockSizeException If the block size of the cipher is invalid.
+     * @throws BadPaddingException If the padding of the message is invalid.
      */
-    private void handleDisconnect() throws IOException, ClientException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
-        // Send DISCONNECT request to server
+    private void handleDisconnect() 
+            throws IOException, ClientException, InvalidKeyException, NoSuchAlgorithmException,
+            NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+       
+                // Send DISCONNECT request to server
         this.sendMessageToServer(Commands.DISCONNECT.toString());
 
         // Wait for server response
-        String response = getAndCheckMessageFromServer();
+        String response = this.getAndCheckMessageFromServer();
 
         // Ensure response is not null
         if (response == null) {
@@ -308,15 +320,18 @@ public class ClientUserHandling {
      * Handles the PUT command by getting key and value from the user, sending a
      * PUT request with the key and value to the server, and waiting for the server
      * response.
-     * @throws IOException if there is an error with the input/output stream.
+     * @throws IOException If there is an error with the input/output stream.
      * @throws ClientException if there is an error with the client response.
      * @throws InvalidKeyException If the secret key is invalid for computing the MAC.
      * @throws NoSuchAlgorithmException If the algorithm for computing the MAC is not available.
-     * @throws BadPaddingException
-     * @throws IllegalBlockSizeException
-     * @throws NoSuchPaddingException
+     * @throws NoSuchPaddingException If the padding scheme used for encryption is not available.
+     * @throws IllegalBlockSizeException If the block size of the cipher is invalid.
+     * @throws BadPaddingException If the padding of the message is invalid.
      */
-    private void handlePut() throws IOException, ClientException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+    private void handlePut() 
+            throws IOException, ClientException, InvalidKeyException, NoSuchAlgorithmException,
+            NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
+
         // Get key from user
         System.out.println(ClientConstants.CLIENT_USER_PUT_KEY_MESSAGE);
         String key = this.getUserInput();
@@ -342,7 +357,7 @@ public class ClientUserHandling {
             String.valueOf(ClientConstants.MESSAGE_TERMINATION), value);
 
         // Wait for server response
-        String response = getAndCheckMessageFromServer();
+        String response = this.getAndCheckMessageFromServer();
 
         // Ensure response is not null
         if (response == null) {
@@ -361,17 +376,7 @@ public class ClientUserHandling {
         // Print server response
         System.out.println(response);
     }
-
-    /**
-     * Sends a message to the server.
-     * @param messages The message(s) to be sent to the server.
-     */
-    private void sendMessageToServer(final String ... messages) {
-        // TODO: Add encyption
-        String message = String.join("", messages);
-        this.clientOut.printf("%s%s", message, ClientConstants.MESSAGE_TERMINATION);
-    }
-
+    
     /**
      * Reads a line of input from the user and removes any trailing newline characters.
      * @return The user input string.
@@ -381,25 +386,48 @@ public class ClientUserHandling {
         String userInput = this.scanner.nextLine();
         
         // Remove any newline characters from end
-        userInput = userInput.endsWith("\n") ? userInput.substring(0, userInput.length() - 1) : userInput;
+        return userInput.endsWith("\n") ? userInput.substring(0, userInput.length() - 1) : userInput;
+    }
+    
+    /**
+     * Sends a message to the server after encrypting it.
+     * @param messages The message(s) to be sent to the server.
+     * @throws InvalidKeyException If the encryption key is invalid.
+     * @throws NoSuchAlgorithmException If the algorithm used for encryption is not available.
+     * @throws NoSuchPaddingException If the padding scheme used for encryption is not available.
+     * @throws IllegalBlockSizeException If the block size of the cipher is invalid.
+     * @throws BadPaddingException If the padding of the message is invalid.
+     */
+    private void sendMessageToServer(final String ... messages) 
+            throws InvalidKeyException,  NoSuchAlgorithmException, NoSuchPaddingException, 
+            IllegalBlockSizeException, BadPaddingException {
+        
+        // Join all messages together
+        String message = String.join("", messages);
+        
+        // Encrypt data
+        byte[] encryptedMessageBytes = SecurityUtility.encryptMessage(message, this.secretKey);
 
-        return userInput;
+        // Encode the encrypted data to string to send to server
+        String cipherText = Base64.getEncoder().encodeToString(encryptedMessageBytes);
+
+        // Send the cipher text to the server
+        this.clientOut.printf("%s%s", cipherText, ClientConstants.MESSAGE_TERMINATION);
     }
 
     /**
-     * Receives an encoded HMAC and a message from the server, decodes and verifies the HMAC,
-     * and returns the message if the verification is successful.
-     * @return Ihe message received from the server.
-     * @throws IOException if there is an error with the input/output stream.
-     * @throws InvalidKeyException If the secret key is invalid for computing the MAC.
-     * @throws NoSuchAlgorithmException If the algorithm for computing the MAC is not available.
-     * @throws BadPaddingException
-     * @throws IllegalBlockSizeException
-     * @throws NoSuchPaddingException
-     * @throws SecurityException If the received HMAC does not match the computed HMAC for the message, 
-     * indicating that the message has been tampered with.
+     * Reads a message from the server, decrypts it, verifies the message integrity using HMAC, and returns the message.
+     * @return The message from the server.
+     * @throws IOException If an I/O error occurs while reading the message.
+     * @throws InvalidKeyException If the secret or MAC key is invalid.
+     * @throws NoSuchAlgorithmException If the cryptographic algorithm used is not available.
+     * @throws NoSuchPaddingException If the padding scheme used in the cryptographic algorithm is not available.
+     * @throws IllegalBlockSizeException If the size of the input data to the cryptographic algorithm is not valid.
+     * @throws BadPaddingException If the padding of the input data to the cryptographic algorithm is not valid.
+     * @throws SecurityException If the HMAC verification fails, indicating that the message has been tampered with.
      */
-    private String getAndCheckMessageFromServer() throws IOException, InvalidKeyException, NoSuchAlgorithmException,
+    private String getAndCheckMessageFromServer() 
+            throws IOException, InvalidKeyException, NoSuchAlgorithmException,
             NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
         
         // Read message in from server
@@ -411,22 +439,22 @@ public class ClientUserHandling {
         // Decrypt the message
         String decryptMessage = SecurityUtility.decryptMessage(encryptedMessage, this.secretKey);
 
-        // 
+        // Split the message from the HMAC
         String[] messages = decryptMessage.split("\n");
         
-        // 
+        // Extract the message
         String message = messages[0];
 
-        // 
+        // Extract the HMAC
         String encodedHmac = messages[1];
 
         // Decode the encoded HMAC from Base64 to a byte array
         byte[] receivedHmac = Base64.getDecoder().decode(encodedHmac);
 
-        //
+        // Generate a HMAC from the message
         byte[] messageHmac = SecurityUtility.generateMac(message, this.macKey);
 
-        //
+        // Compare the two HMACs
         if (SecurityUtility.macCodesAreEqual(messageHmac, receivedHmac)) {
             return message;
         } else {
