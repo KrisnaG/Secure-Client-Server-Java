@@ -7,16 +7,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.net.ssl.SSLSession;
@@ -24,6 +20,7 @@ import javax.net.ssl.SSLSocket;
 
 import a4.src.main.utility.Commands;
 import a4.src.main.utility.SecurityUtility;
+import a4.src.main.utility.SecurityUtilityException;
 
 /**
  * The ServerClientHandler class handles the communication with a single client connected to the server.
@@ -118,8 +115,7 @@ public class ServerClientHandler implements Runnable {
                         break;
                 }
             }
-        } catch (IOException | NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException 
-            | IllegalBlockSizeException | BadPaddingException error) {
+        } catch (IOException | NoSuchAlgorithmException | SecurityUtilityException error) {
             logger.log(Level.WARNING, error.getMessage());
         } finally {
             // Ensure client data is remove if client unexpectedly disconnects
@@ -174,16 +170,9 @@ public class ServerClientHandler implements Runnable {
      * and loads client username.
      * @param serverOut The PrintWriter stream to send messages to the client.
      * @param data The client ID associated with the connection.
-     * @throws NoSuchAlgorithmException If the secret key is invalid.
-     * @throws InvalidKeyException If the specified algorithm is not found.
-     * @throws NoSuchPaddingException If the padding scheme is not available.
-     * @throws IllegalBlockSizeException If the block size of the cipher is invalid.
-     * @throws BadPaddingException If the padding of the message is invalid.
+     * @throws SecurityUtilityException If there is an error during the encryption process.
      */
-    private void handleConnect(final PrintWriter serverOut, final String data)
-            throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException,
-            IllegalBlockSizeException, BadPaddingException {
-
+    private void handleConnect(final PrintWriter serverOut, final String data) throws SecurityUtilityException {
         // Check if client is already connected.
         if (!this.serverClientSessionManager.addClient(data)) {
             this.sendMessageToClient(
@@ -192,6 +181,7 @@ public class ServerClientHandler implements Runnable {
             this.handleDisconnect(serverOut, ServerConstants.SERVER_DISCONNECT_ERROR);
             return;
         }
+
         this.clientID = data;
         this.clientConnected = true;
         this.sendMessageToClient(
@@ -205,16 +195,9 @@ public class ServerClientHandler implements Runnable {
      * client with the specified key.
      * @param serverOut The PrintWriter stream to send messages to the client.
      * @param key The key used to identify the data to be deleted.
-     * @throws NoSuchAlgorithmException If the secret key is invalid.
-     * @throws InvalidKeyException If the specified algorithm is not found.
-     * @throws NoSuchPaddingException If the padding scheme is not available.
-     * @throws IllegalBlockSizeException If the block size of the cipher is invalid.
-     * @throws BadPaddingException If the padding of the message is invalid.
+     * @throws SecurityUtilityException If there is an error during the encryption process.
      */
-    private void handleDelete(final PrintWriter serverOut, final String key)
-            throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, 
-            IllegalBlockSizeException, BadPaddingException {
-
+    private void handleDelete(final PrintWriter serverOut, final String key) throws SecurityUtilityException {
         // Client must connect first
         if (!clientConnected) {
             this.handleDisconnect(serverOut, ServerConstants.SERVER_DISCONNECT_ERROR);
@@ -239,16 +222,9 @@ public class ServerClientHandler implements Runnable {
      * Disconnects the client, updates the server's client session manager, and closes the socket connection.
      * @param serverOut PrintWriter object used to send messages to the server
      * @param clientInitiatedDisconnect Indicates whether the client initiated the disconnection or not.
-     * @throws NoSuchAlgorithmException If the secret key is invalid.
-     * @throws InvalidKeyException If the specified algorithm is not found.
-     * @throws NoSuchPaddingException If the padding scheme is not available.
-     * @throws IllegalBlockSizeException If the block size of the cipher is invalid.
-     * @throws BadPaddingException If the padding of the message is invalid.
+     * @throws SecurityUtilityException If there is an error during the encryption process.
      */
-    private void handleDisconnect(final PrintWriter serverOut, final boolean clientInitiatedDisconnect) 
-            throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, 
-            IllegalBlockSizeException, BadPaddingException {
-        
+    private void handleDisconnect(final PrintWriter serverOut, final boolean clientInitiatedDisconnect) throws SecurityUtilityException {
         // Remove client data
         this.serverClientSessionManager.disconnectClient(clientID);
         this.clientConnected = false;
@@ -265,20 +241,13 @@ public class ServerClientHandler implements Runnable {
     }
 
     /**
-    * Handles a GET command from the client, which retrieves data for the connected client 
-    * with the specified key.
-    * @param serverOut The PrintWriter used to send messages to the client.
-    * @param key The key used to identify the data to be retrieved.
-    * @throws NoSuchAlgorithmException If the secret key is invalid.
-    * @throws InvalidKeyException If the specified algorithm is not found.
-     * @throws NoSuchPaddingException If the padding scheme is not available.
-     * @throws IllegalBlockSizeException If the block size of the cipher is invalid.
-     * @throws BadPaddingException If the padding of the message is invalid.
-    */
-    private void handleGet(final PrintWriter serverOut, final String key)
-            throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, 
-            IllegalBlockSizeException, BadPaddingException {
-        
+     * Handles a GET command from the client, which retrieves data for the connected client 
+     * with the specified key.
+     * @param serverOut The PrintWriter used to send messages to the client.
+     * @param key The key used to identify the data to be retrieved.
+     * @throws SecurityUtilityException If there is an error during the encryption process.
+     */
+    private void handleGet(final PrintWriter serverOut, final String key) throws SecurityUtilityException {
         // Client must connect first
         if (!clientConnected) {
             this.handleDisconnect(serverOut, ServerConstants.SERVER_DISCONNECT_ERROR);
@@ -306,16 +275,9 @@ public class ServerClientHandler implements Runnable {
      * @param serverOut The PrintWriter used to send messages to the client.
      * @param key The key to be added or updated.
      * @param value The value to be added or updated.
-     * @throws NoSuchAlgorithmException If the secret key is invalid.
-     * @throws InvalidKeyException If the specified algorithm is not found.
-     * @throws NoSuchPaddingException If the padding scheme is not available.
-     * @throws IllegalBlockSizeException If the block size of the cipher is invalid.
-     * @throws BadPaddingException If the padding of the message is invalid.
+     * @throws SecurityUtilityException If there is an error during the encryption process.
      */
-    private void handlePut(final PrintWriter serverOut, final String data) 
-            throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, 
-            IllegalBlockSizeException, BadPaddingException {
-        
+    private void handlePut(final PrintWriter serverOut, final String data) throws SecurityUtilityException {
         // Extract the key and value
         String[] keyValuePair = data.split(String.valueOf(ServerConstants.MESSAGE_TERMINATION));
         
@@ -349,19 +311,12 @@ public class ServerClientHandler implements Runnable {
      * Sends a message to the client with its corresponding HMAC.
      * @param serverOut The PrintWriter stream to send the message to.
      * @param messages The message(s) to be sent to the client.
-     * @throws NoSuchAlgorithmException If the secret key is invalid.
-     * @throws InvalidKeyException If the specified algorithm is not found.
-     * @throws NoSuchPaddingException If the padding scheme is not available.
-     * @throws IllegalBlockSizeException If the block size of the cipher is invalid.
-     * @throws BadPaddingException If the padding of the message is invalid.
+     * @throws SecurityUtilityException If there is an error during the encryption or MAC process.
      */
-    private void sendMessageToClient(final PrintWriter serverOut, final String ... messages) 
-            throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, 
-            IllegalBlockSizeException, BadPaddingException {
-       
+    private void sendMessageToClient(final PrintWriter serverOut, final String ... messages) throws SecurityUtilityException {
         // Join messages into one
         String message = String.join("", messages);
-
+        System.out.println(message);
         // Compute HMAC for message using private key
         byte[] hmac = SecurityUtility.generateMac(message, this.macKey);
 
@@ -386,16 +341,9 @@ public class ServerClientHandler implements Runnable {
      * @param serverIn The BufferedReader to read the message from the client.
      * @return The decrypted message.
      * @throws IOException If an I/O error occurs while waiting for the message from the client.
-     * @throws InvalidKeyException If the secret key is invalid.
-     * @throws NoSuchAlgorithmException If the encryption algorithm is not available.
-     * @throws NoSuchPaddingException If the padding scheme is not available.
-     * @throws IllegalBlockSizeException If the block size of the cipher is invalid.
-     * @throws BadPaddingException If the padding of the message is invalid.
+     * @throws SecurityUtilityException Uf there is an error during the decryption process.
      */
-    private String waitAndGetRequestFromClient(final BufferedReader serverIn) 
-            throws IOException, InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, 
-            IllegalBlockSizeException, BadPaddingException {
-
+    private String waitAndGetRequestFromClient(final BufferedReader serverIn) throws IOException, SecurityUtilityException {
         // Read message in from server
         String receivedMessage = serverIn.readLine();
 

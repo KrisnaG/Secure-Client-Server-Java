@@ -4,22 +4,19 @@
 package a4.src.main.client;
 
 import a4.src.main.utility.SecurityUtility;
+import a4.src.main.utility.SecurityUtilityException;
 import a4.src.main.utility.Validation;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.IOException;
-import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
@@ -94,17 +91,16 @@ public class Client {
             while (!disconnect) {
                 disconnect = clientUserHandling.handleRequest();
             }
-        } catch (SecurityException  error) {
+        } catch (SecurityException | SecurityUtilityException error) {
             logger.log(Level.WARNING, error.getMessage());
-            logger.log(Level.INFO, "Security Violation - Disconnecting");
-        } catch (NoSuchAlgorithmException | InvalidKeyException error) {
+            logger.log(Level.INFO, "Security Error - Disconnecting");
+        } catch (NoSuchAlgorithmException error) {
             logger.log(Level.WARNING, error.getMessage());
             logger.log(Level.INFO, "Key Error - Disconnecting");
         } catch (SSLPeerUnverifiedException error) {
             logger.log(Level.WARNING, error.getMessage());
             logger.log(Level.INFO, "Untrusted Server Certificate - Disconnecting");
-        } catch (ClientException | IOException | NoSuchPaddingException 
-                | IllegalBlockSizeException | BadPaddingException error) {
+        } catch (ClientException | IOException error) {
             logger.log(Level.WARNING, error.getMessage());
             logger.log(Level.INFO, "Disconnecting");
         }     
