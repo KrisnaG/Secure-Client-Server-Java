@@ -111,7 +111,7 @@ public class ClientUserHandling {
             throw new ClientException(ClientConstants.INVALID_NULL_RESPONSE_ERROR);
         }
 
-        String[] responseToken = response.split(" ", 2);
+        String[] responseToken = response.split(": ", 2);
 
         // Check if server response has two parts
         if (!Validation.numberOfInputsValid(responseToken, 2)) {
@@ -231,7 +231,7 @@ public class ClientUserHandling {
             throw new ClientException(ClientConstants.INVALID_NULL_RESPONSE_ERROR);
         }
 
-        String[] responseToken = response.split(" ", 2);
+        String[] responseToken = response.split(": ", 2);
 
         // Test Server response is valid
         if (!responseToken[0].equals(Commands.DELETE.toString()) || 
@@ -262,7 +262,7 @@ public class ClientUserHandling {
             throw new ClientException(ClientConstants.INVALID_NULL_RESPONSE_ERROR);
         }
 
-        String[] responseToken = response.split(" ");
+        String[] responseToken = response.split(": ");
 
         // Test Server response is valid
         if (!responseToken[0].equals(Commands.DISCONNECT.toString()) || 
@@ -318,7 +318,7 @@ public class ClientUserHandling {
             throw new ClientException(ClientConstants.INVALID_NULL_RESPONSE_ERROR);
         }
 
-        String[] responseToken = response.split(" ", 2);
+        String[] responseToken = response.split(": ", 2);
 
         // Test Server response is valid
         if (!responseToken[0].equals(Commands.PUT.toString()) || 

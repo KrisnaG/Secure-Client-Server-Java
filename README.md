@@ -1,7 +1,11 @@
 # Secure Java Client-Server Application
 
 This is a Secure Java client-server application for sending messages over a network. It consists of a server program and a client program that communicate with each other using sockets and specific commands.
+It communicates using SSL/TLS protocol with the SSLServerSocket and SSLSocket and ensures secure data transmission by employing various security measures, including truststore management with keytool, 
+symmetric encryption, and HMAC (Hash-based Message Authentication Code).
 
+This application employs symmetric encryption and HMAC. Symmetric encryption ensures that the data transmitted between the server and client remains confidential by encrypting it using a shared key. 
+HMAC guarantees the integrity of the data by appending a hash-based message authentication code to each message, allowing the recipient to verify its authenticity.
 
 ---
 
@@ -27,6 +31,14 @@ This is a Secure Java client-server application for sending messages over a netw
 
 NOTE: Any arguments inputted after the port number will be ignored.
 
+Once you execute this command, you will be prompt if you would like to generate default certificates. Respond with either y or n.
+
+```bash
+    Do you want to generate default certificates? (y/n):
+```
+
+This default generation is only recommended for testing.
+
 ### ***Starting the Client***
 
 1. Navigate to the root directory of the project (a4).
@@ -40,6 +52,22 @@ NOTE: Any arguments inputted after the port number will be ignored.
 
 NOTE: Any arguments inputted after the port number will be ignored.
 
+### ***Generating Default Certificates and Trust Store***
+
+1. Navigate to the root directory of the project (a4).
+2. Run the following command to generate default certificates and trust store:
+
+```bash
+    ./generateCertificatesAndTrustStore.sh
+```
+Once you execute this command, you will be prompt if you would like to generate default certificates. Respond with either y or n.
+
+```bash
+    Do you want to generate default certificates? (y/n):
+```
+
+This default generation is only recommended for testing.
+
 ### ***Cleaning the compiled files***
 
 1. Navigate to the root directory of the project (a4).
@@ -52,7 +80,11 @@ NOTE: Any arguments inputted after the port number will be ignored.
 
 ### ***Client Usage***
 
-Once the client is started, the user would then be presented with a message to enter a username to connect to with the server. If the username is already connected, the client will be disconnected. If the user successfully connects, the server responds with CONNECT: OK, with is presented to the user.
+The client will connect to the server through the secure channel and check the server for authenticity. Once connected to the server they will exchange keys,
+one for symmetric encryption and the other for HMAC.
+
+Once the client is started, the user would then be presented with a message to enter a username to connect to with the server. If the username is already connected, 
+the client will be disconnected. If the user successfully connects, the server responds with CONNECT: OK, with is presented to the user.
 
 Once connected, the client is presented with the following options:
 
@@ -99,7 +131,10 @@ Following the users action the user is presented with the following server respo
 
 ### ***Server Usage***
 
-Once the server is started, the server only accepts the following commands:
+Once the server is started, it will await for clients to connect. Once a client connects through the secure channel they 
+will exchange keys, one for symmetric encryption and the other for HMAC.
+
+The server only accepts the following commands:
 
 - CONNECT
   - Following the CONNECT command is the client ID / username.

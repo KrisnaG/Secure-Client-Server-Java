@@ -176,7 +176,7 @@ public class ServerClientHandler implements Runnable {
         // Check if client is already connected.
         if (!this.serverClientSessionManager.addClient(data)) {
             this.sendMessageToClient(
-                serverOut, Commands.CONNECT.toString(), " ", ServerConstants.SERVER_ERROR);
+                serverOut, Commands.CONNECT.toString(), ": ", ServerConstants.SERVER_ERROR);
             logger.log(Level.INFO, "CLIENT: {0} is already connected.", data);
             this.handleDisconnect(serverOut, ServerConstants.SERVER_DISCONNECT_ERROR);
             return;
@@ -185,7 +185,7 @@ public class ServerClientHandler implements Runnable {
         this.clientID = data;
         this.clientConnected = true;
         this.sendMessageToClient(
-            serverOut, Commands.CONNECT.toString(), " ", ServerConstants.SERVER_EXECUTED_COMMAND_OK);
+            serverOut, Commands.CONNECT.toString(), ": ", ServerConstants.SERVER_EXECUTED_COMMAND_OK);
 
         logger.log(Level.INFO, "CLIENT: {0} CONNECTED", data);
     }
@@ -215,7 +215,7 @@ public class ServerClientHandler implements Runnable {
         }
 
         this.sendMessageToClient(
-                serverOut, Commands.DELETE.toString(), " ", deleteResponse);
+                serverOut, Commands.DELETE.toString(), ": ", deleteResponse);
     }
 
     /**
@@ -235,7 +235,7 @@ public class ServerClientHandler implements Runnable {
             this.sendMessageToClient(
                 serverOut, 
                 Commands.DISCONNECT.toString(),
-                " ",
+                ": ",
                 ServerConstants.SERVER_EXECUTED_COMMAND_OK);
         }
     }
@@ -262,7 +262,7 @@ public class ServerClientHandler implements Runnable {
         
         // Check data is present
         if (encryptedClientData == null) {
-            this.sendMessageToClient(serverOut, Commands.GET.toString(), " ", ServerConstants.SERVER_ERROR);
+            this.sendMessageToClient(serverOut, Commands.GET.toString(), ": ", ServerConstants.SERVER_ERROR);
         } else {
             this.sendMessageToClient(
                 serverOut, 
@@ -294,16 +294,16 @@ public class ServerClientHandler implements Runnable {
 
         // Server must have enough memory to store data
         if (!Server.isMemoryEnoughAvailable((long) encryptedKey.getBytes().length + encryptedValue.getBytes().length)) {
-            this.sendMessageToClient(serverOut, Commands.PUT.toString(), " ", ServerConstants.SERVER_ERROR);
+            this.sendMessageToClient(serverOut, Commands.PUT.toString(), ": ", ServerConstants.SERVER_ERROR);
         }
        
         // Put data and respond to the client
         if (this.serverClientSessionManager.putClientData(this.clientID, encryptedKey, encryptedValue)) {
             this.sendMessageToClient(
-                serverOut, Commands.PUT.toString(), " ", ServerConstants.SERVER_EXECUTED_COMMAND_OK);
+                serverOut, Commands.PUT.toString(), ": ", ServerConstants.SERVER_EXECUTED_COMMAND_OK);
         } else {
             this.sendMessageToClient(
-                serverOut, Commands.PUT.toString(), " ", ServerConstants.SERVER_ERROR);
+                serverOut, Commands.PUT.toString(), ": ", ServerConstants.SERVER_ERROR);
         }      
     }
     
@@ -316,7 +316,7 @@ public class ServerClientHandler implements Runnable {
     private void sendMessageToClient(final PrintWriter serverOut, final String ... messages) throws SecurityUtilityException {
         // Join messages into one
         String message = String.join("", messages);
-        System.out.println(message);
+
         // Compute HMAC for message using private key
         byte[] hmac = SecurityUtility.generateMac(message, this.macKey);
 
